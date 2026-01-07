@@ -1,3 +1,0 @@
-C:/Users/PC/Desktop/QuintetCompany/projects/mini_dbms/mini_dbms/build/CMakeFiles/mini_dbms.dir
-C:/Users/PC/Desktop/QuintetCompany/projects/mini_dbms/mini_dbms/build/CMakeFiles/edit_cache.dir
-C:/Users/PC/Desktop/QuintetCompany/projects/mini_dbms/mini_dbms/build/CMakeFiles/rebuild_cache.dir

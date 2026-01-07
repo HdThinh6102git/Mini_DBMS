@@ -1,1 +1,0 @@
-CMakeFiles/mini_dbms.dir/src/main.cpp.obj CMakeFiles/mini_dbms.dir/src/storage/buffer_pool_manager.cpp.obj CMakeFiles/mini_dbms.dir/src/storage/disk_manager.cpp.obj CMakeFiles/mini_dbms.dir/src/storage/page.cpp.obj CMakeFiles/mini_dbms.dir/src/storage/table_heap.cpp.obj CMakeFiles/mini_dbms.dir/src/storage/table_page.cpp.obj
