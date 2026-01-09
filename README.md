@@ -260,3 +260,133 @@ Rất mạnh cho:
   - Hot path rõ ràng
 
 Vì JIT tối ưu theo hành vi thực tế, C++ chỉ tối ưu theo dự đoán.
+# FLOW TEST BUFFER POOL
+
+B1: Init Disk Manager
+- Hàm Init() của Disk Manager sẽ mở file test.db nếu tồn tại hoặc tạo mới file nếu chưa có
+
+B2: Init Buffer Pool Manager
+- Buffer pool có 2 frame => tối đa 2 page trong RAM
+- Buffer Pool Manager được gắn với DiskManager
+
+Trạng thái ban đầu:
+Buffer Pool:
+  Frame 0: empty
+  Frame 1: empty
+Page Table: empty
+LRU List: empty
+Free List: [0, 1]
+
+B3: Create Page
+page_id_t pid;
+Page *page = bpm.NewPage(&pid);
+
+Luồng xử lý:
+1. Lấy frame từ free_list → frame 0
+2. Gọi DiskManager::AllocatePage() → pid = 0
+3. Reset memory page
+4. Set page_id = 0
+5. pin_count = 1
+6. Ghi mapping vào page_table
+
+Trạng thái:
+Frame 0: page_id=0, pin=1, dirty=false
+Frame 1: empty
+Page Table: {0 -> 0}
+Free List: [1]
+LRU List: []
+
+B4: Write Page
+strcpy(page->GetData(), "Hello Buffer Pool");
+bpm.UnpinPage(pid, true);
+
+Hành vi:
+1. Ghi dữ liệu trong RAM
+2. Disk CHƯA bị động tới
+
+Unpin(true):
+- pin_count: 1 → 0
+- dirty = true
+- Page được đưa vào LRU
+
+Trạng thái:
+Frame 0: page_id=0, pin=0, dirty=true
+LRU List: [0]
+
+B5: Fetch lại page vừa tạo
+Page *page2 = bpm.FetchPage(pid);
+
+Luồng FetchPage():
+1. Page 0 đã có trong page_table
+2. Không đọc disk
+3. pin_count: 0 → 1
+4. Remove khỏi LRU
+
+Trạng thái:
+Frame 0: page_id=0, pin=1, dirty=true
+LRU List: []
+
+B6: Đọc dữ liệu
+cout << page2->GetData() << endl;
+bpm.UnpinPage(pid, false);
+
+Hành vi:
+1. Đọc string từ RAM
+2. Unpin(false)
+   - pin_count: 1 → 0
+   - dirty giữ nguyên (true)
+
+B7: Tạo page thứ 2
+Page *p2 = bpm.NewPage(&pid2);
+
+Luồng:
+1. Lấy frame 1 từ free_list
+2. Allocate page_id = 1
+3. pin = 1
+
+Sau khi unpin:
+Frame 0: page_id=0, dirty=true
+Frame 1: page_id=1, dirty=true
+LRU List: [0, 1]
+
+B8: Tạo page thứ 3 → BẮT BUỘC EVICT
+Page *p3 = bpm.NewPage(&pid3);
+
+Buffer pool size = 2, không còn free frame
+
+Eviction process:
+1. Lấy frame đầu LRU → frame 0
+2. Page 0 dirty → flush xuống disk
+3. Xóa mapping page 0
+4. Reuse frame 0
+5. Allocate page_id = 2
+
+Trạng thái:
+Frame 0: page_id=2, dirty=true
+Frame 1: page_id=1, dirty=true
+Disk: page 0 đã được ghi
+
+B9: Fetch lại page 0 (đã bị evict)
+Page *page1_again = bpm.FetchPage(pid);
+
+Luồng:
+1. Page 0 không có trong buffer pool
+2. Evict page 1 (dirty → flush)
+3. Read page 0 từ disk
+4. Pin page 0
+
+Ý nghĩa:
+- Chứng minh disk ↔ buffer pool hoạt động đúng
+- Data "Hello Buffer Pool" được đọc lại từ disk
+
+B10: Flush toàn bộ page
+bpm.FlushAllPages();
+
+Hành vi:
+1. Ghi tất cả page dirty trong buffer pool xuống disk
+2. Đảm bảo disk = RAM
+
+Buffer Pool trong InnoDB làm 3 việc chính:
+1. Cache page đọc từ disk
+2. Giữ page đang được modify (dirty pages)
+3. Chứa page mới được tạo (chưa tồn tại trên disk)
