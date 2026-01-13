@@ -8,6 +8,7 @@ include_directories(include)
 file(GLOB_RECURSE SOURCES 
     "src/*.cpp"
     "src/storage/*.cpp"
+    "tests/*.cpp"
 )
 
 add_executable(mini_dbms ${SOURCES})

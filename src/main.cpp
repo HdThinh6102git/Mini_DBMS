@@ -111,60 +111,66 @@
 //     return 0;
 // }
 
-#include <iostream>
-#include <cstdint>
-#include <cstring>
+// #include <iostream>
+// #include <cstdint>
+// #include <cstring>
 
-// ===== storage layer =====
-#include "storage/disk_manager.h"
-#include "storage/buffer_pool_manager.h"
-#include "storage/page.h"
-#include "storage/table_page.h"
+// // ===== storage layer =====
+// #include "storage/disk_manager.h"
+// #include "storage/buffer_pool_manager.h"
+// #include "storage/page.h"
+// #include "storage/table_page.h"
 
-using namespace std;
-using namespace db;
+// using namespace std;
+// using namespace db;
 
+// int main() {
+//     cout << "===== TablePage Test =====" << endl;
+
+//     // 1. Init DiskManager
+//     DiskManager disk("test.db");
+
+//     // 2. Init BufferPoolManager (2 frames)
+//     BufferPoolManager bpm(2, &disk);
+
+//     // 3. Create new page
+//     page_id_t pid;
+//     Page *page = bpm.NewPage(&pid);
+//     if (page == nullptr) {
+//         cerr << "Failed to allocate page" << endl;
+//         return 1;
+//     }
+
+//     // 4. Init TablePage layout
+//     TablePage::Init(page);
+
+//     // 5. Insert records
+//     uint16_t slot;
+//     TablePage::InsertRecord(page, "Alice", 6, &slot);
+//     TablePage::InsertRecord(page, "Bob", 4, &slot);
+
+//     // 6. Unpin & mark dirty
+//     bpm.UnpinPage(pid, true);
+
+//     // 7. Fetch page again
+//     Page *p2 = bpm.FetchPage(pid);
+//     if (p2 == nullptr) {
+//         cerr << "Failed to fetch page" << endl;
+//         return 1;
+//     }
+
+//     // 8. Read records
+//     cout << TablePage::GetRecord(p2, 0) << endl;
+//     cout << TablePage::GetRecord(p2, 1) << endl;
+
+//     bpm.UnpinPage(pid, false);
+
+//     cout << "===== Test Done =====" << endl;
+//     return 0;
+// }
+
+void RunTableSqlSimulation();
 int main() {
-    cout << "===== TablePage Test =====" << endl;
-
-    // 1. Init DiskManager
-    DiskManager disk("test.db");
-
-    // 2. Init BufferPoolManager (2 frames)
-    BufferPoolManager bpm(2, &disk);
-
-    // 3. Create new page
-    page_id_t pid;
-    Page *page = bpm.NewPage(&pid);
-    if (page == nullptr) {
-        cerr << "Failed to allocate page" << endl;
-        return 1;
-    }
-
-    // 4. Init TablePage layout
-    TablePage::Init(page);
-
-    // 5. Insert records
-    uint16_t slot;
-    TablePage::InsertRecord(page, "Alice", 6, &slot);
-    TablePage::InsertRecord(page, "Bob", 4, &slot);
-
-    // 6. Unpin & mark dirty
-    bpm.UnpinPage(pid, true);
-
-    // 7. Fetch page again
-    Page *p2 = bpm.FetchPage(pid);
-    if (p2 == nullptr) {
-        cerr << "Failed to fetch page" << endl;
-        return 1;
-    }
-
-    // 8. Read records
-    cout << TablePage::GetRecord(p2, 0) << endl;
-    cout << TablePage::GetRecord(p2, 1) << endl;
-
-    bpm.UnpinPage(pid, false);
-
-    cout << "===== Test Done =====" << endl;
+    RunTableSqlSimulation();
     return 0;
 }
